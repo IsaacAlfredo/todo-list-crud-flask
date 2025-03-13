@@ -60,6 +60,21 @@ def delete_todo(id):
     return "", 204
 
 
+@app.route("/todo/update/<id>", methods=["PATCH"])
+def update_todo(id):
+    updated_todo = db.session.execute(db.select(Todo).filter_by(id=id)).scalar_one()
+    if "check" in request.json:
+        updated_todo.check = request.json["check"]
+    if "title" in request.json:
+        updated_todo.title = request.json["title"]
+    if "description" in request.json:
+        updated_todo.description = request.json["description"]
+    print(request.json)
+
+    db.session.commit()
+    return "", 204
+
+
 @app.route("/todos", methods=["GET"])
 def get_todos():
     todos = db.session.execute(db.select(Todo)).scalars()
