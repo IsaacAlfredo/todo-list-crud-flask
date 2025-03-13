@@ -52,6 +52,14 @@ def get_todo(id):
     }, 200
 
 
+@app.route("/todo/delete/<id>", methods=["DELETE"])
+def delete_todo(id):
+    deleted_todo = db.session.execute(db.select(Todo).filter_by(id=id)).scalar_one()
+    db.session.delete(deleted_todo)
+    db.session.commit()
+    return "", 204
+
+
 @app.route("/todos", methods=["GET"])
 def get_todos():
     todos = db.session.execute(db.select(Todo)).scalars()
