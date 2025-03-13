@@ -37,3 +37,9 @@ def create():
         "description": todo.description,
         "check": todo.check,
     }, 201
+
+
+@app.route("/todos", methods=["GET"])
+def get_todos():
+    todos = db.session.execute(db.select(Todo)).scalars()
+    return todos.all(), 200
