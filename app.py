@@ -43,7 +43,7 @@ def create():
 
 @app.route("/todo/<id>", methods=["GET"])
 def get_todo(id):
-    todo = db.session.query(Todo).get(id)
+    todo = db.session.execute(db.select(Todo).filter_by(id=id)).scalar_one()
     return {
         "id": todo.id,
         "title": todo.title,
