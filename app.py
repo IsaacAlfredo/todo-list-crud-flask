@@ -23,3 +23,17 @@ class Todo(db.Model):
 
 with app.app_context():
     db.create_all()
+
+
+@app.route("/todo/create", methods=["POST"])
+def create():
+    new_todo_data = request.json
+    todo = Todo(title=new_todo_data["title"], description=new_todo_data["description"])
+    db.session.add(todo)
+    db.session.commit()
+    return {
+        "id": todo.id,
+        "title": todo.title,
+        "description": todo.description,
+        "check": todo.check,
+    }, 201
