@@ -28,15 +28,28 @@ with app.app_context():
 @app.route("/todo/create", methods=["POST"])
 def create():
     new_todo_data = request.json
-    todo = Todo(title=new_todo_data["title"], description=new_todo_data["description"])
-    db.session.add(todo)
+    new_todo = Todo(
+        title=new_todo_data["title"], description=new_todo_data["description"]
+    )
+    db.session.add(new_todo)
     db.session.commit()
+    return {
+        "id": new_todo.id,
+        "title": new_todo.title,
+        "description": new_todo.description,
+        "check": new_todo.check,
+    }, 201
+
+
+@app.route("/todo/<id>", methods=["GET"])
+def get_todo(id):
+    todo = db.session.query(Todo).get(id)
     return {
         "id": todo.id,
         "title": todo.title,
         "description": todo.description,
         "check": todo.check,
-    }, 201
+    }, 200
 
 
 @app.route("/todos", methods=["GET"])
