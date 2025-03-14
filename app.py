@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, make_response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, mapped_column
 
@@ -28,17 +28,34 @@ with app.app_context():
 @app.route("/todo/create", methods=["POST"])
 def create():
     new_todo_data = request.json
-    new_todo = Todo(
-        title=new_todo_data["title"], description=new_todo_data["description"]
+
+    if not db.session.execute(
+        db.select(Todo).filter_by(title=request.json["title"])
+    ).scalar_one_or_none():
+        new_todo = Todo(
+            title=new_todo_data["title"], description=new_todo_data["description"]
+        )
+        db.session.add(new_todo)
+        db.session.commit()
+        return (
+            {
+                "id": new_todo.id,
+                "title": new_todo.title,
+                "description": new_todo.description,
+                "check": new_todo.check,
+            },
+            201,
+            {"Location": f"/todo/{new_todo.id}"},
+        )
+
+    return (
+        "",
+        409,
+        {
+            "Message": "Todo title already exists",
+            "Title-Conflicted": request.json["title"],
+        },
     )
-    db.session.add(new_todo)
-    db.session.commit()
-    return {
-        "id": new_todo.id,
-        "title": new_todo.title,
-        "description": new_todo.description,
-        "check": new_todo.check,
-    }, 201
 
 
 @app.route("/todo/<id>", methods=["GET"])
