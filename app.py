@@ -81,14 +81,17 @@ def delete_todo(id):
 
 @app.route("/todo/<id>", methods=["PATCH"])
 def update_todo(id):
-    updated_todo = db.session.execute(db.select(Todo).filter_by(id=id)).scalar_one()
+    updated_todo = db.session.execute(
+        db.select(Todo).filter_by(id=id)
+    ).scalar_one_or_none()
+    if not updated_todo:
+        return "", 404
     if "check" in request.json:
         updated_todo.check = request.json["check"]
     if "title" in request.json:
         updated_todo.title = request.json["title"]
     if "description" in request.json:
         updated_todo.description = request.json["description"]
-    print(request.json)
 
     db.session.commit()
     return "", 204
