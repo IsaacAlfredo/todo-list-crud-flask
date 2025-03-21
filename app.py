@@ -25,7 +25,7 @@ with app.app_context():
     db.create_all()
 
 
-@app.route("/todo/create", methods=["POST"])
+@app.route("/todo", methods=["POST"])
 def create():
     new_todo_data = request.json
 
@@ -69,7 +69,7 @@ def get_todo(id):
     }, 200
 
 
-@app.route("/todo/delete/<id>", methods=["DELETE"])
+@app.route("/todo/<id>", methods=["DELETE"])
 def delete_todo(id):
     deleted_todo = db.session.execute(db.select(Todo).filter_by(id=id)).scalar_one()
     db.session.delete(deleted_todo)
@@ -77,7 +77,7 @@ def delete_todo(id):
     return "", 204
 
 
-@app.route("/todo/update/<id>", methods=["PATCH"])
+@app.route("/todo/<id>", methods=["PATCH"])
 def update_todo(id):
     updated_todo = db.session.execute(db.select(Todo).filter_by(id=id)).scalar_one()
     if "check" in request.json:
@@ -92,7 +92,7 @@ def update_todo(id):
     return "", 204
 
 
-@app.route("/todos", methods=["GET"])
+@app.route("/todo", methods=["GET"])
 def get_todos():
     todos = db.session.execute(db.select(Todo)).scalars()
     return todos.all(), 200
