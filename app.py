@@ -1,4 +1,4 @@
-from flask import Flask, request, make_response
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, mapped_column
 
@@ -73,7 +73,11 @@ def get_todo(id):
 
 @app.route("/todo/<id>", methods=["DELETE"])
 def delete_todo(id):
-    deleted_todo = db.session.execute(db.select(Todo).filter_by(id=id)).scalar_one()
+    deleted_todo = db.session.execute(
+        db.select(Todo).filter_by(id=id)
+    ).scalar_one_or_none()
+    if not deleted_todo:
+        return "", 404
     db.session.delete(deleted_todo)
     db.session.commit()
     return "", 204
