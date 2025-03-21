@@ -60,7 +60,9 @@ def create():
 
 @app.route("/todo/<id>", methods=["GET"])
 def get_todo(id):
-    todo = db.session.execute(db.select(Todo).filter_by(id=id)).scalar_one()
+    todo = db.session.execute(db.select(Todo).filter_by(id=id)).scalar_one_or_none()
+    if not todo:
+        return "", 404
     return {
         "id": todo.id,
         "title": todo.title,
