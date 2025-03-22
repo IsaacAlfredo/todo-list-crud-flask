@@ -32,6 +32,12 @@ class Todo(db.Model):
             raise TypeError()
         return text
 
+    @validates("check")
+    def validate_bool(self, atribute_key, boolean):
+        if not isinstance(boolean, bool):
+            raise TypeError()
+        return boolean
+
 
 with app.app_context():
     db.create_all()
@@ -130,7 +136,7 @@ def update_todo(id):
     except TypeError:
         return {
             "error": "Bad Request",
-            "message": "Title and description fields must be String type.",
+            "message": "Unexpected type recieved in body request.",
         }, 400
 
 
