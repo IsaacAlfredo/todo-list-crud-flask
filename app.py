@@ -1,6 +1,12 @@
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, mapped_column
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    MappedAsDataclass,
+    mapped_column,
+    validates,
+)
 
 
 class Base(DeclarativeBase, MappedAsDataclass):
@@ -20,6 +26,12 @@ class Todo(db.Model):
     description: Mapped[str]
     check: Mapped[bool] = mapped_column(default=False)
 
+    @validates("description", "title")
+    def validate_string(self, atribute_key, text):
+        if not isinstance(text, str):
+            raise TypeError()
+        return text
+
 
 with app.app_context():
     db.create_all()
@@ -28,34 +40,44 @@ with app.app_context():
 @app.route("/todo", methods=["POST"])
 def create():
     new_todo_data = request.json
+    try:
+        if not db.session.execute(
+            db.select(Todo).filter_by(title=request.json["title"])
+        ).scalar_one_or_none():
+            new_todo = Todo(
+                title=new_todo_data["title"], description=new_todo_data["description"]
+            )
+            db.session.add(new_todo)
 
-    if not db.session.execute(
-        db.select(Todo).filter_by(title=request.json["title"])
-    ).scalar_one_or_none():
-        new_todo = Todo(
-            title=new_todo_data["title"], description=new_todo_data["description"]
-        )
-        db.session.add(new_todo)
-        db.session.commit()
+            db.session.commit()
+            return (
+                {
+                    "id": new_todo.id,
+                    "title": new_todo.title,
+                    "description": new_todo.description,
+                    "check": new_todo.check,
+                },
+                201,
+                {"Location": f"/todo/{new_todo.id}"},
+            )
         return (
+            "",
+            409,
             {
-                "id": new_todo.id,
-                "title": new_todo.title,
-                "description": new_todo.description,
-                "check": new_todo.check,
+                "Message": "Todo title already exists",
+                "Title-Conflicted": request.json["title"],
             },
-            201,
-            {"Location": f"/todo/{new_todo.id}"},
         )
-
-    return (
-        "",
-        409,
-        {
-            "Message": "Todo title already exists",
-            "Title-Conflicted": request.json["title"],
-        },
-    )
+    except KeyError:
+        return {
+            "error": "Bad Request",
+            "message": "Title field is required.",
+        }, 400
+    except TypeError:
+        return {
+            "error": "Bad Request",
+            "message": "Title and description fields must be String type.",
+        }, 400
 
 
 @app.route("/todo/<id>", methods=["GET"])
@@ -90,15 +112,26 @@ def update_todo(id):
     ).scalar_one_or_none()
     if not updated_todo:
         return "", 404
-    if "check" in request.json:
-        updated_todo.check = request.json["check"]
-    if "title" in request.json:
-        updated_todo.title = request.json["title"]
-    if "description" in request.json:
-        updated_todo.description = request.json["description"]
+    try:
+        if "check" in request.json:
+            updated_todo.check = request.json["check"]
+        if "title" in request.json:
+            updated_todo.title = request.json["title"]
+        if "description" in request.json:
+            updated_todo.description = request.json["description"]
 
-    db.session.commit()
-    return "", 204
+        db.session.commit()
+        return "", 204
+    except KeyError:
+        return {
+            "error": "Bad Request",
+            "message": "Title field is required.",
+        }, 400
+    except TypeError:
+        return {
+            "error": "Bad Request",
+            "message": "Title and description fields must be String type.",
+        }, 400
 
 
 @app.route("/todo", methods=["GET"])
