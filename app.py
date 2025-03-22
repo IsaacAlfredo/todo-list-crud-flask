@@ -1,43 +1,11 @@
 from flask import Flask, request
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    Mapped,
-    MappedAsDataclass,
-    mapped_column,
-    validates,
-)
-
-
-class Base(DeclarativeBase, MappedAsDataclass):
-    pass
-
-
-db = SQLAlchemy(model_class=Base)
+from models.todo_model import Todo
+from models.base_model import db
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///todoinfo.db"
+
 db.init_app(app)
-
-
-class Todo(db.Model):
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, init=False)
-    title: Mapped[str] = mapped_column(unique=True, nullable=False)
-    description: Mapped[str]
-    check: Mapped[bool] = mapped_column(default=False)
-
-    @validates("description", "title")
-    def validate_string(self, atribute_key, text):
-        if not isinstance(text, str):
-            raise TypeError()
-        return text
-
-    @validates("check")
-    def validate_bool(self, atribute_key, boolean):
-        if not isinstance(boolean, bool):
-            raise TypeError()
-        return boolean
-
 
 with app.app_context():
     db.create_all()
