@@ -39,7 +39,7 @@ def create():
     except KeyError:
         return {
             "error": "Bad Request",
-            "message": "Title field is required.",
+            "message": "Title and description fields are required.",
         }, 400
     except TypeError:
         return {
@@ -90,15 +90,11 @@ def update_todo(id):
 
         db.session.commit()
         return "", 204
-    except KeyError:
-        return {
-            "error": "Bad Request",
-            "message": "Title field is required.",
-        }, 400
+
     except TypeError:
         return {
             "error": "Bad Request",
-            "message": "Unexpected type recieved in body request.",
+            "message": "Unexpected type received in body request.",
         }, 400
 
 
